@@ -2,7 +2,8 @@
 export enum StoneColor {
     Black = 'black',
     White = 'white',
-    Empty = 'empty'
+    Empty = 'empty',
+    Ko = 'ko'
 };
 
 // Type game status

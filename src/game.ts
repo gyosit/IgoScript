@@ -1,4 +1,4 @@
-import { GameSize, GameStatus, Handicap, Player, StoneColor } from './components/common';
+import { GameSize, GameStatus, Handicap, Player, StoneColor, Vertex } from './components/common';
 import { GameBoard } from './components/gameboard';
 
 /**
@@ -21,6 +21,7 @@ export class Game {
     private id: number;
     private originalId: number;
     private isInitialized: boolean;
+    private turnOrder: StoneColor[];
     gameBoard: GameBoard;
     gameSize: GameSize;
     gameStatus: GameStatus;
@@ -29,6 +30,11 @@ export class Game {
     isThinking: boolean;
     sgf: string;
     turn: StoneColor;
+
+    /* Error */
+    static PlayerAlreadyExists = new Error('The player already exists.');
+    static GameAlreadyHasTwoPlayers = new Error('The game already has two players.');
+    static NotAllowedToPlayOutOfTurn = new Error('Not allowed to play out of turn.');
 
     /**
      * 
@@ -42,6 +48,7 @@ export class Game {
         this.id = id;
         this.originalId = originalId;
         this.isInitialized = false;
+        this.turnOrder = [StoneColor.Black, StoneColor.White];
         this.gameStatus = GameStatus.NotStarted;
         this.isThinking = false;
         this.sgf = '';
@@ -50,6 +57,14 @@ export class Game {
         this.gameBoard = new GameBoard(gameSize);
         this.handicap = handicap;
         this.players = [];
+    }
+
+    /**
+     * Change turn.
+     * 
+     */
+    private changeTurn() {
+        this.turn = this.turnOrder[1 - this.turnOrder.indexOf(this.turn)];
     }
 
     /**
@@ -63,13 +78,31 @@ export class Game {
      */
     addPlayer(player: Player) {
         if (this.players.length >= 2) {
-            throw new Error('The game already has two players.');
+            throw Game.GameAlreadyHasTwoPlayers;
         }
 
         if (this.players.length === 1 && this.players[0].stoneColor === player.stoneColor) {
-            throw new Error('The player already exists.');
+            throw Game.PlayerAlreadyExists;
         }
         
         this.players.push(player);
     }
+
+    /**
+     * Play a stone.
+     * 
+     * @param {Vertex} vertex The vertex to play.
+     * @param {StoneColor} stoneColor The color of the stone to play.
+     * 
+     */
+    play(vertex: Vertex, stoneColor: StoneColor) {
+        if (stoneColor !== this.turn) throw Game.NotAllowedToPlayOutOfTurn;
+        this.gameBoard.play(vertex, stoneColor);
+        this.changeTurn();
+    }
+
+    get(vertex: Vertex): StoneColor {
+        return this.gameBoard.get(vertex);
+    }
+
 }

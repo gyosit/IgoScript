@@ -31,6 +31,10 @@ test("Create a stone.", () => {
     expect(blackStone.stoneColor).toBe(StoneColor.Black);
     const whiteStone: Stone = new Stone(1, StoneColor.White);
     expect(whiteStone.stoneColor).toBe(StoneColor.White);
+    const emptyStone: Stone = new Stone(2, StoneColor.Empty);
+    expect(emptyStone.stoneColor).toBe(StoneColor.Empty);
+    const koStone: Stone = new Stone(3, StoneColor.Ko);
+    expect(koStone.stoneColor).toBe(StoneColor.Ko);
 });
 
 test("Create a vertex stone.", () => {
@@ -39,33 +43,6 @@ test("Create a vertex stone.", () => {
     const vertexStone: VertexStone = new VertexStone(vertex, stone);
     expect(vertexStone.vertex).toBe(vertex);
     expect(vertexStone.stone).toBe(stone);
-});
-
-test("Play a stone.", () => {
-    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
-
-    const vertex: Vertex = V.vertex([1, 2]);
-    gameBoard.play(vertex, StoneColor.Black);
-    const playedStones: Stone[] = gameBoard.getCurrentBoard();
-    expect(playedStones[vertex.index].stoneColor).toBe(StoneColor.Black);
-
-    const vertex2: Vertex = V.vertex([2, 3]);
-    gameBoard.play(vertex2, StoneColor.White);
-    const playedStones2: Stone[] = gameBoard.getCurrentBoard();
-    expect(playedStones2[vertex2.index].stoneColor).toBe(StoneColor.White);
-    expect(playedStones[vertex.index].stoneColor).toBe(StoneColor.Black);
-
-    const vertex3: Vertex = V.vertex([3, 4]);
-    expect(() => gameBoard.play(vertex3, StoneColor.Empty)).toThrow('Empty stone is not allowed to play.');
-});
-
-test("Attempt to play a stone on the same vertex.", () => {
-    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
-
-    const vertex: Vertex = V.vertex([1, 2]);
-    gameBoard.play(vertex, StoneColor.Black);
-    expect(() => gameBoard.play(vertex, StoneColor.Black)).toThrow('The vertex is occupied.');
-    expect(() => gameBoard.play(vertex, StoneColor.White)).toThrow('The vertex is occupied.');
 });
 
 test("Create and update a group.", () => {
@@ -99,6 +76,21 @@ test("Find the breath points from the vertex stones.", () => {
     }
 });
 
+test("Throw error by operations for empty or ko group.", () => {
+    const emptyGroup1: Group = new Group(0, StoneColor.Empty);
+    const emptyGroup2: Group = new Group(1, StoneColor.Empty);
+    expect(() => emptyGroup1.getVertexStones()).toThrow('The group has no vertex stone.');
+    expect(() => emptyGroup1.getBreathPoints()).toThrow('The operation is not allowed for the special group.');
+    expect(() => emptyGroup1.merge(emptyGroup2)).toThrow('The operation is not allowed for the special group.');
+    expect(() => emptyGroup1.collapsed(emptyGroup2)).toThrow('The operation is not allowed for the special group.');
+
+    const koGroup1: Group = new Group(2, StoneColor.Ko);
+    const koGroup2: Group = new Group(3, StoneColor.Ko);
+    expect(() => koGroup1.getBreathPoints()).toThrow('The operation is not allowed for the special group.');
+    expect(() => koGroup1.merge(koGroup2)).toThrow('The operation is not allowed for the special group.');
+    expect(() => koGroup1.collapsed(koGroup2)).toThrow('The operation is not allowed for the special group.');
+});
+
 test("Merge two groups.", () => {
     const group1: Group = new Group(0, StoneColor.Black);
     group1.addVertexStone(V.vertex([0, 2]), StoneColor.Black);
@@ -128,8 +120,6 @@ test("Merge two groups.", () => {
     expect(group1.getId()).toBe(0);
     expect(group2.getId()).toBe(-1);
     expect(group2.getStoneColor()).toBe(StoneColor.Empty);
-    expect(group2.getVertexStones().length).toBe(0);
-    expect(group2.getBreathPoints().length).toBe(0);
 
     // Merge the same group.
     expect(() => group1.merge(group1)).toThrow('The group is the same.');
@@ -180,8 +170,8 @@ test("Collide two groups with the different colors.", () => {
     const group2: Group = new Group(1, StoneColor.White);
     group2.addVertexStone(V.vertex([1, 2]), StoneColor.White);
 
-    group1.collide(group2);
-    group2.collide(group1);
+    group1.collapsed(group2);
+    group2.collapsed(group1);
     
     const expectedBlackBreathPoints = [
         V.vertex([0, 1]),
@@ -217,63 +207,158 @@ test("Push group to the group list.", () => {
     expect(() => Group.push(groups, group3)).toThrow('The group already exists.');
 });
 
-// test("Get breath points.", () => {
-//     const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
+test("Play a stone.", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
 
-//     const vertex: Vertex = V.vertex([1, 2]);
-//     const expectedBreathPoints: Vertex[] = [
-//         V.vertex([0, 2]),
-//         V.vertex([2, 2]),
-//         V.vertex([1, 1]),
-//         V.vertex([1, 3])
-//     ];
+    const vertex: Vertex = V.vertex([1, 2]);
+    gameBoard.play(vertex, StoneColor.Black);
+    const playedStones: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones[vertex.index].stoneColor).toBe(StoneColor.Black);
 
-//     gameBoard.play(vertex, StoneColor.Black);
-//     const group = gameBoard.getGroup(vertex);
-//     const breathPoints: Vertex[] = group.getBreathPoints();
-//     expect(breathPoints.length).toBe(4);
-//     for (const breathPoint of breathPoints) {
-//         expect(Vertex.includes(expectedBreathPoints, breathPoint)).toEqual(true);
-//     }
-//     expect(Vertex.includes(breathPoints, V.vertex([1, 2]))).toEqual(false);
+    const vertex2: Vertex = V.vertex([2, 3]);
+    gameBoard.play(vertex2, StoneColor.White);
+    const playedStones2: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones2[vertex2.index].stoneColor).toBe(StoneColor.White);
+    expect(playedStones[vertex.index].stoneColor).toBe(StoneColor.Black);
 
-//     const vertex2: Vertex = V.vertex([1, 3]);
-//     const expectedBreathPoints2: Vertex[] = [
-//         V.vertex([0, 2]),
-//         V.vertex([2, 2]),
-//         V.vertex([1, 1]),
-//         V.vertex([0, 3]),
-//         V.vertex([2, 3]),
-//         V.vertex([1, 4])
-//     ];
-//     gameBoard.play(vertex2, StoneColor.Black);
-//     const group2 = gameBoard.getGroup(vertex2);
-//     const breathPoints2: Vertex[] = group2.getBreathPoints();
-//     expect(breathPoints2.length).toBe(6);
-//     for (const breathPoint of breathPoints2) {
-//         expect(Vertex.includes(expectedBreathPoints2, breathPoint)).toEqual(true);
-//     }
-//     expect(Vertex.includes(breathPoints2, V.vertex([1, 3]))).toEqual(false);
-// });
+    const vertex3: Vertex = V.vertex([3, 4]);
+    expect(() => gameBoard.play(vertex3, StoneColor.Empty)).toThrow('Empty stone is not allowed to play.');
+});
 
-// test("Capture a stone.", () => {
-//     const gameBoard = new GameBoard(GameSize.Nine);
+test("Get a stone from the vertex.", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
 
-//     const playingVertexes: Vertex[] = [
-//         V.vertex([1, 1]),
-//         V.vertex([2, 2]),
-//         V.vertex([3, 1]),
-//         V.vertex([2, 0])
-//     ];
+    const vertex: Vertex = V.vertex([1, 2]);
+    gameBoard.play(vertex, StoneColor.Black);
+    expect(gameBoard.get(vertex)).toBe(StoneColor.Black);
 
-//     const whiteVertex: Vertex = V.vertex([2, 1]);
-//     gameBoard.play(whiteVertex, StoneColor.White);
-//     expect(gameBoard.getCurrentBoard()[whiteVertex.index].stoneColor).toBe(StoneColor.White);
+    const vertex2: Vertex = V.vertex([2, 3]);
+    gameBoard.play(vertex2, StoneColor.White);
+    expect(gameBoard.get(vertex2)).toBe(StoneColor.White);
+    expect(gameBoard.get(vertex)).toBe(StoneColor.Black);
 
-//     for (let vertex of playingVertexes) {
-//         gameBoard.play(vertex, StoneColor.Black);
-//     }
+    const vertex3: Vertex = V.vertex([9, 9]);
+    expect(() => gameBoard.get(vertex3)).toThrow('The vertex is out of the board.');
+});
 
-//     const playedStones: Stone[] = gameBoard.getCurrentBoard();
-//     expect(playedStones[V.vertex([2, 1]).index].stoneColor).toBe(StoneColor.Empty);
-// });
+test("Attempt to play a stone on the same vertex.", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
+
+    const vertex: Vertex = V.vertex([1, 2]);
+    gameBoard.play(vertex, StoneColor.Black);
+    expect(() => gameBoard.play(vertex, StoneColor.Black)).toThrow('The vertex is occupied.');
+    expect(() => gameBoard.play(vertex, StoneColor.White)).toThrow('The vertex is occupied.');
+});
+
+test("Attempt to play a stone on the non-breath point.", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
+
+    const blackVertexes = [
+        V.vertex([0, 2]),
+        V.vertex([1, 1]),
+        V.vertex([2, 2]),
+        V.vertex([1, 3])
+    ];
+    for (const blackVertex of blackVertexes) {
+        gameBoard.play(blackVertex, StoneColor.Black);
+    }
+
+    const previousGroups: Group[] = gameBoard.groups.slice();
+    const whiteVertex = V.vertex([1, 2]);
+    expect(() => gameBoard.play(whiteVertex, StoneColor.White)).toThrow('The vertex has no breath point.');
+    expect(gameBoard.groups).toEqual(previousGroups);
+});
+
+test("Capture the opponent's stones.", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
+
+    // Capture the one stone.
+    const blackVertex: Vertex = V.vertex([1, 2]);
+    gameBoard.play(blackVertex, StoneColor.Black);
+    const playedStones1: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones1[blackVertex.index].stoneColor).toBe(StoneColor.Black);
+
+    const whiteVertexes1 = [
+        V.vertex([0, 2]),
+        V.vertex([1, 1]),
+        V.vertex([2, 2]),
+        V.vertex([1, 3])
+    ];
+    for (const vertex of whiteVertexes1) {
+        const playedStones: Stone[] = gameBoard.getCurrentBoard();
+        expect(playedStones[blackVertex.index].stoneColor).toBe(StoneColor.Black);
+        gameBoard.play(vertex, StoneColor.White);
+    }
+
+    const playedStones2: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones2[blackVertex.index].stoneColor).toBe(StoneColor.Empty);
+
+    // Capture the two stones.
+    const blackVertexes2 = [
+        V.vertex([5, 5]),
+        V.vertex([5, 6]),
+    ];
+    for (const blackVertex2 of blackVertexes2) {
+        gameBoard.play(blackVertex2, StoneColor.Black);
+        expect(gameBoard.getCurrentBoard()[blackVertex2.index].stoneColor).toBe(StoneColor.Black);
+    }
+
+    const whiteVertexes2 = [
+        V.vertex([5, 4]),
+        V.vertex([6, 5]),
+        V.vertex([6, 6]),
+        V.vertex([5, 7]),
+        V.vertex([4, 6]),
+        V.vertex([4, 5])
+    ];
+    for (const vertex of whiteVertexes2) {
+        const playedStones: Stone[] = gameBoard.getCurrentBoard();
+        expect(playedStones[blackVertexes2[0].index].stoneColor).toBe(StoneColor.Black);
+        expect(playedStones[blackVertexes2[1].index].stoneColor).toBe(StoneColor.Black);
+        gameBoard.play(vertex, StoneColor.White);
+    }
+
+    const playedStones3: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones3[blackVertexes2[0].index].stoneColor).toBe(StoneColor.Empty);
+    expect(playedStones3[blackVertexes2[1].index].stoneColor).toBe(StoneColor.Empty);    
+});
+
+test("Play a stone on the non-breath point, but capture the opponent's stones. And Ko", () => {
+    const gameBoard: GameBoard = new GameBoard(GameSize.Nine);
+
+    const blackVertexes = [
+        V.vertex([0, 2]),
+        V.vertex([1, 1]),
+        V.vertex([2, 2])
+    ];
+    for (const blackVertex of blackVertexes) {
+        gameBoard.play(blackVertex, StoneColor.Black);
+    }
+
+    const whiteVertexes = [
+        V.vertex([0, 3]),
+        V.vertex([1, 2]),
+        V.vertex([2, 3]),
+        V.vertex([1, 4])
+    ];
+    for (const whiteVertex of whiteVertexes) {
+        gameBoard.play(whiteVertex, StoneColor.White);
+    }
+
+    const capturedVertex: Vertex = V.vertex([1, 2]);
+    const playedStones1: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones1[capturedVertex.index].stoneColor).toBe(StoneColor.White);
+    const blackVertex2: Vertex = V.vertex([1, 3]);
+    gameBoard.play(blackVertex2, StoneColor.Black);
+    const playedStones: Stone[] = gameBoard.getCurrentBoard();
+    expect(playedStones[blackVertex2.index].stoneColor).toBe(StoneColor.Black);
+    expect(playedStones[capturedVertex.index].stoneColor).toBe(StoneColor.Ko);
+
+    // Ko is not allowed.
+    expect(() => gameBoard.play(capturedVertex, StoneColor.White)).toThrow('Ko is not allowed to play.');
+
+    // Ko is allowed after playing another stone.
+    const whiteVertex2: Vertex = V.vertex([8, 8]);
+    gameBoard.play(whiteVertex2, StoneColor.White);
+    gameBoard.play(capturedVertex, StoneColor.White);
+});
