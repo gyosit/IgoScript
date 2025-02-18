@@ -1,3 +1,4 @@
+import { Game } from "../game";
 import { VertexBase, Vertex, StoneColor, GameSize } from "./common";
 import { GameBoard, Group, Stone, VertexStone } from "./gameboard";
 
@@ -54,7 +55,7 @@ test("Create and update a group.", () => {
     expect(group.getVertexStones().length).toBe(1);
     expect(group.getVertexStones()[0].vertex.equals(V.vertex([0, 2]))).toBe(true);
     expect(group.getVertexStones()[0].stone.stoneColor).toBe(StoneColor.Black);
-    expect(() => group.addVertexStone(V.vertex([0, 2]), StoneColor.Black)).toThrow('The vertex stone already exists.');
+    expect(() => group.addVertexStone(V.vertex([0, 2]), StoneColor.Black)).toThrow(Group.ERR_ALREADY_EXISTS_VERTEX_STONE);
 
     // Put a black stone on the vertex [1, 2].
     group.addVertexStone(V.vertex([1, 2]), StoneColor.Black);
@@ -79,16 +80,16 @@ test("Find the breath points from the vertex stones.", () => {
 test("Throw error by operations for empty or ko group.", () => {
     const emptyGroup1: Group = new Group(0, StoneColor.Empty);
     const emptyGroup2: Group = new Group(1, StoneColor.Empty);
-    expect(() => emptyGroup1.getVertexStones()).toThrow('The group has no vertex stone.');
-    expect(() => emptyGroup1.getBreathPoints()).toThrow('The operation is not allowed for the special group.');
-    expect(() => emptyGroup1.merge(emptyGroup2)).toThrow('The operation is not allowed for the special group.');
-    expect(() => emptyGroup1.collapsed(emptyGroup2)).toThrow('The operation is not allowed for the special group.');
+    expect(() => emptyGroup1.getVertexStones()).toThrow(Group.ERR_NO_VERTEX_STONE);
+    expect(() => emptyGroup1.getBreathPoints()).toThrow(Group.ERR_SPECIAL_GROUP);
+    expect(() => emptyGroup1.merge(emptyGroup2)).toThrow(Group.ERR_SPECIAL_GROUP);
+    expect(() => emptyGroup1.collapsed(emptyGroup2)).toThrow(Group.ERR_SPECIAL_GROUP);
 
     const koGroup1: Group = new Group(2, StoneColor.Ko);
     const koGroup2: Group = new Group(3, StoneColor.Ko);
-    expect(() => koGroup1.getBreathPoints()).toThrow('The operation is not allowed for the special group.');
-    expect(() => koGroup1.merge(koGroup2)).toThrow('The operation is not allowed for the special group.');
-    expect(() => koGroup1.collapsed(koGroup2)).toThrow('The operation is not allowed for the special group.');
+    expect(() => koGroup1.getBreathPoints()).toThrow(Group.ERR_SPECIAL_GROUP);
+    expect(() => koGroup1.merge(koGroup2)).toThrow(Group.ERR_SPECIAL_GROUP);
+    expect(() => koGroup1.collapsed(koGroup2)).toThrow(Group.ERR_SPECIAL_GROUP);
 });
 
 test("Merge two groups.", () => {
@@ -122,17 +123,17 @@ test("Merge two groups.", () => {
     expect(group2.getStoneColor()).toBe(StoneColor.Empty);
 
     // Merge the same group.
-    expect(() => group1.merge(group1)).toThrow('The group is the same.');
+    expect(() => group1.merge(group1)).toThrow(Group.ERR_MERGE_SAME_GROUP);
 
     // Merge the group with the different stone color.
     const group3: Group = new Group(2, StoneColor.White);
     group3.addVertexStone(V.vertex([2, 2]), StoneColor.White);
-    expect(() => group1.merge(group3)).toThrow('The stone colors are different.');
+    expect(() => group1.merge(group3)).toThrow(Group.ERR_MERGE_DIFFERENT_COLOR);
 
     // Merge the far group.
     const group4: Group = new Group(3, StoneColor.Black);
     group4.addVertexStone(V.vertex([0, 4]), StoneColor.Black);
-    expect(() => group1.merge(group4)).toThrow('The groups are far.');
+    expect(() => group1.merge(group4)).toThrow(Group.ERR_MERGE_FAR_STONES);
 });
 
 test("Merge three groups.", () => {
@@ -204,7 +205,7 @@ test("Push group to the group list.", () => {
     expect(groups.length).toBe(2);
 
     const group3: Group = new Group(0, StoneColor.Black);
-    expect(() => Group.push(groups, group3)).toThrow('The group already exists.');
+    expect(() => Group.push(groups, group3)).toThrow(Group.ERR_ALREADY_EXISTS_GROUP);
 });
 
 test("Play a stone.", () => {
@@ -222,7 +223,7 @@ test("Play a stone.", () => {
     expect(playedStones[vertex.index].stoneColor).toBe(StoneColor.Black);
 
     const vertex3: Vertex = V.vertex([3, 4]);
-    expect(() => gameBoard.play(vertex3, StoneColor.Empty)).toThrow('Empty stone is not allowed to play.');
+    expect(() => gameBoard.play(vertex3, StoneColor.Empty)).toThrow(GameBoard.ERR_EMPTY_STONE);
 });
 
 test("Get a stone from the vertex.", () => {
@@ -238,7 +239,7 @@ test("Get a stone from the vertex.", () => {
     expect(gameBoard.get(vertex)).toBe(StoneColor.Black);
 
     const vertex3: Vertex = V.vertex([9, 9]);
-    expect(() => gameBoard.get(vertex3)).toThrow('The vertex is out of the board.');
+    expect(() => gameBoard.get(vertex3)).toThrow(GameBoard.ERR_OUT_OF_BOARD);
 });
 
 test("Attempt to play a stone on the same vertex.", () => {
@@ -246,8 +247,8 @@ test("Attempt to play a stone on the same vertex.", () => {
 
     const vertex: Vertex = V.vertex([1, 2]);
     gameBoard.play(vertex, StoneColor.Black);
-    expect(() => gameBoard.play(vertex, StoneColor.Black)).toThrow('The vertex is occupied.');
-    expect(() => gameBoard.play(vertex, StoneColor.White)).toThrow('The vertex is occupied.');
+    expect(() => gameBoard.play(vertex, StoneColor.Black)).toThrow(GameBoard.ERR_OCCUPIED_VERTEX);
+    expect(() => gameBoard.play(vertex, StoneColor.White)).toThrow(GameBoard.ERR_OCCUPIED_VERTEX);
 });
 
 test("Attempt to play a stone on the non-breath point.", () => {
@@ -265,7 +266,7 @@ test("Attempt to play a stone on the non-breath point.", () => {
 
     const previousGroups: Group[] = gameBoard.groups.slice();
     const whiteVertex = V.vertex([1, 2]);
-    expect(() => gameBoard.play(whiteVertex, StoneColor.White)).toThrow('The vertex has no breath point.');
+    expect(() => gameBoard.play(whiteVertex, StoneColor.White)).toThrow(GameBoard.ERR_NO_BREATH_POINT);
     expect(gameBoard.groups).toEqual(previousGroups);
 });
 
@@ -355,7 +356,7 @@ test("Play a stone on the non-breath point, but capture the opponent's stones. A
     expect(playedStones[capturedVertex.index].stoneColor).toBe(StoneColor.Ko);
 
     // Ko is not allowed.
-    expect(() => gameBoard.play(capturedVertex, StoneColor.White)).toThrow('Ko is not allowed to play.');
+    expect(() => gameBoard.play(capturedVertex, StoneColor.White)).toThrow(GameBoard.ERR_KO_STONE);
 
     // Ko is allowed after playing another stone.
     const whiteVertex2: Vertex = V.vertex([8, 8]);

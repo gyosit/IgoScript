@@ -32,9 +32,9 @@ export class Game {
     turn: StoneColor;
 
     /* Error */
-    static PlayerAlreadyExists = new Error('The player already exists.');
-    static GameAlreadyHasTwoPlayers = new Error('The game already has two players.');
-    static NotAllowedToPlayOutOfTurn = new Error('Not allowed to play out of turn.');
+    static ERR_PLAYER_ALREADY_EXISTS = new Error('The player already exists.');
+    static ERR_TWO_PLAYERS_ALREADY_EXIST = new Error('The game already has two players.');
+    static ERR_PLAY_OUT_OF_TURN = new Error('Not allowed to play out of turn.');
 
     /**
      * 
@@ -78,11 +78,11 @@ export class Game {
      */
     addPlayer(player: Player) {
         if (this.players.length >= 2) {
-            throw Game.GameAlreadyHasTwoPlayers;
+            throw Game.ERR_TWO_PLAYERS_ALREADY_EXIST
         }
 
         if (this.players.length === 1 && this.players[0].stoneColor === player.stoneColor) {
-            throw Game.PlayerAlreadyExists;
+            throw Game.ERR_PLAYER_ALREADY_EXISTS;
         }
         
         this.players.push(player);
@@ -96,7 +96,7 @@ export class Game {
      * 
      */
     play(vertex: Vertex, stoneColor: StoneColor) {
-        if (stoneColor !== this.turn) throw Game.NotAllowedToPlayOutOfTurn;
+        if (stoneColor !== this.turn) throw Game.ERR_PLAY_OUT_OF_TURN
         this.gameBoard.play(vertex, stoneColor);
         this.changeTurn();
     }

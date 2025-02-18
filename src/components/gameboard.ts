@@ -1,3 +1,4 @@
+import { Game } from "../game";
 import { StoneColor, VertexBase, Vertex, GameSize } from "./common";
 
 const V = new VertexBase(9);
@@ -15,6 +16,13 @@ export class GameBoard {
     gameSize: GameSize;
     groups: Group[];
     vertexTerritories: VertexTerritory[];
+
+    /* Errors */
+    static ERR_EMPTY_STONE = new Error('Empty stone is not allowed to play.');
+    static ERR_OCCUPIED_VERTEX = new Error('The vertex is occupied.');
+    static ERR_KO_STONE = new Error('Ko is not allowed to play.');
+    static ERR_NO_BREATH_POINT = new Error('The vertex has no breath point.');
+    static ERR_OUT_OF_BOARD = new Error('The vertex is out of the board.');
 
     /**
      * 
@@ -57,7 +65,7 @@ export class GameBoard {
 
         // Check whether the stone is empty.
         if (stoneColor === StoneColor.Empty) {
-            throw new Error('Empty stone is not allowed to play.');
+            throw GameBoard.ERR_EMPTY_STONE;
         }
 
         // Check whether the vertex is occupied.
@@ -65,9 +73,9 @@ export class GameBoard {
             for (let vertexStone of group.getVertexStones()) {
                 if (vertexStone.vertex.index === vertex.index) {
                     if (vertexStone.stone.stoneColor === StoneColor.Ko) {
-                        throw new Error('Ko is not allowed to play.');
+                        throw GameBoard.ERR_KO_STONE;
                     }
-                    throw new Error('The vertex is occupied.');
+                    throw GameBoard.ERR_OCCUPIED_VERTEX;
                 }
             }
         }
@@ -120,7 +128,7 @@ export class GameBoard {
             }
             if (parentGroup.collapsed(enemyGroup)) {
                 this.groups = buckupGroups;
-                throw new Error('The vertex has no breath point.');
+                throw GameBoard.ERR_NO_BREATH_POINT;
             }
         }
         //// Ko rule: 2. The play captures only one stone.
@@ -173,7 +181,7 @@ export class GameBoard {
 
     get(vertex: Vertex): StoneColor {
         if (vertex.index < 0 || vertex.index >= this.gameSize * this.gameSize) {
-            throw new Error('The vertex is out of the board.');
+            throw GameBoard.ERR_OUT_OF_BOARD;
         }
         const currentBoard = this.getCurrentBoard();
         return currentBoard[vertex.index].stoneColor;
@@ -215,6 +223,19 @@ export class Group {
     private vertexStones: VertexStone[];
     private breathPoints: Vertex[];
 
+    /* Errors */
+    static ERR_SPECIAL_GROUP = new Error('The operation is not allowed for the special group.');
+    static ERR_COLLIDE_SAME_COLOR = new Error('Not able to collide with the same color group.');
+    static ERR_COLLIDE_EMPTY_GROUPS = new Error('Empty groups are not allowed to collide.');
+    static ERR_NO_VERTEX_STONE = new Error('The group has no vertex stone.');
+    static ERR_ALREADY_EXISTS_VERTEX_STONE = new Error('The vertex stone already exists.');
+    static ERR_ALREADY_EXISTS_BREATH_POINT = new Error('The breath point already exists.');
+    static ERR_NO_BREATH_POINT = new Error('The group has no breath point.');
+    static ERR_ALREADY_EXISTS_GROUP = new Error('The group already exists.');
+    static ERR_MERGE_SAME_GROUP = new Error('Not able to merge the same group.');
+    static ERR_MERGE_DIFFERENT_COLOR = new Error('Not able to merge the group with the different color.');
+    static ERR_MERGE_FAR_STONES = new Error('Not able to merge the group with far stones.');
+
     /**
      * 
      * @param {number} id The id of the group.
@@ -236,7 +257,7 @@ export class Group {
      */
     private errEmptyOrKo() {
         if (this.stoneColor === StoneColor.Empty || this.stoneColor === StoneColor.Ko) {
-            throw new Error('The operation is not allowed for the special group.');
+            throw Group.ERR_SPECIAL_GROUP;
         }
     }
 
@@ -285,10 +306,10 @@ export class Group {
         enemyGroup.errEmptyOrKo();
         // Check whether the groups are the same color.
         if (this.stoneColor === enemyGroup.stoneColor) {
-            throw new Error('The groups are the same color.');
+            throw Group.ERR_COLLIDE_SAME_COLOR;
         }
         if (this.stoneColor === StoneColor.Empty || enemyGroup.stoneColor === StoneColor.Empty) {
-            throw new Error('Empty groups are not allowed to collide.');
+            throw Group.ERR_COLLIDE_EMPTY_GROUPS;
         }
 
         for (let vertexStone of enemyGroup.getVertexStones()) {
@@ -336,7 +357,7 @@ export class Group {
      * 
      */
     getVertexStones(): VertexStone[] {
-        if (this.vertexStones.length < 1) throw new Error('The group has no vertex stone.');
+        if (this.vertexStones.length < 1) throw Group.ERR_NO_VERTEX_STONE;
         return this.vertexStones;
     }
 
@@ -352,7 +373,7 @@ export class Group {
         // Check whether the vertex stone already exists.
         for (let vertexStone of this.vertexStones) {
             if (vertexStone.vertex.index === vertex.index) {
-                throw new Error('The vertex stone already exists.');
+                throw Group.ERR_ALREADY_EXISTS_VERTEX_STONE;
             }
         }
 
@@ -389,7 +410,7 @@ export class Group {
      */
     private addBreathPoint(vertex: Vertex) {
         if (Vertex.includes(this.breathPoints, vertex)) {
-            throw new Error('The breath point already exists.');
+            throw Group.ERR_ALREADY_EXISTS_BREATH_POINT;
         }
 
         this.breathPoints.push(vertex);
@@ -405,7 +426,7 @@ export class Group {
      */
     private removeBreathPoint(vertex: Vertex) {
         if (!Vertex.includes(this.breathPoints, vertex)) {
-            throw new Error('The breath point does not exist.');
+            throw Group.ERR_NO_BREATH_POINT;
         }
 
         this.breathPoints = this.breathPoints.filter(breathPoint => !breathPoint.equals(vertex));
@@ -423,7 +444,7 @@ export class Group {
     static push(groups: Group[], group: Group) {
         for (let g of groups) {
             if (g.id === group.id) {
-                throw new Error('The group already exists.');
+                throw Group.ERR_ALREADY_EXISTS_GROUP;
             }
         }
 
@@ -445,12 +466,12 @@ export class Group {
         group.errEmptyOrKo();
         // Check whether the group is the same.
         if (this.id === group.id) {
-            throw new Error('The group is the same.');
+            throw Group.ERR_MERGE_SAME_GROUP;
         }
 
         // Check whether the stone colors are the same.
         if (this.stoneColor !== group.stoneColor) {
-            throw new Error('The stone colors are different.');
+            throw Group.ERR_MERGE_DIFFERENT_COLOR;
         }
 
         // Check whether the groups are far.
@@ -465,7 +486,7 @@ export class Group {
             }
         }
         if (!isNear) {
-            throw new Error('The groups are far.');
+            throw Group.ERR_MERGE_FAR_STONES;
         }
 
         for (let vertexStone of group.getVertexStones()) {

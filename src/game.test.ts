@@ -23,11 +23,11 @@ test("Create a game.", () => {
     const blackPlayer: Player = new Player(StoneColor.Black);
     game.addPlayer(blackPlayer);
     const secondBlackPlayer: Player = new Player(StoneColor.Black);
-    expect(() => game.addPlayer(secondBlackPlayer)).toThrow(Game.PlayerAlreadyExists);
+    expect(() => game.addPlayer(secondBlackPlayer)).toThrow(Game.ERR_PLAYER_ALREADY_EXISTS);
     const whitePlayer: Player = new Player(StoneColor.White);
     game.addPlayer(whitePlayer);
     const secondWhitePlayer: Player = new Player(StoneColor.White);
-    expect(() => game.addPlayer(secondWhitePlayer)).toThrow(Game.GameAlreadyHasTwoPlayers);
+    expect(() => game.addPlayer(secondWhitePlayer)).toThrow(Game.ERR_TWO_PLAYERS_ALREADY_EXIST);
 });
 
 test("Play stones.", () => {
@@ -48,6 +48,6 @@ test("Not allowed to play in a row.", () => {
     const vertex1 = V.vertex([0, 0]);
     game.play(vertex1, StoneColor.Black);
     const vertex2 = V.vertex([1, 0]);
-    expect(() => game.play(vertex2, StoneColor.Black)).toThrow(Game.NotAllowedToPlayOutOfTurn);
+    expect(() => game.play(vertex2, StoneColor.Black)).toThrow(Game.ERR_PLAY_OUT_OF_TURN);
 });
 
