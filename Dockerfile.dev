@@ -1,0 +1,24 @@
+# Use the official node image
+FROM mcr.microsoft.com/devcontainers/javascript-node:0-18
+
+# Update the package list and install any necessary dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    wget \
+    git \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a sudo user
+# RUN echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# USER node
+
+# Set the working directory
+WORKDIR /workspaces
+
+# Copy the current directory contents into the container 
+# COPY . /workspaces
+
+# Set the default command to run when starting the container
+CMD ["bash"]

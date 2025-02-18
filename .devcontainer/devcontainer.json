@@ -1,0 +1,25 @@
+{
+	"name": "Node.js",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/project,type=bind",
+	"workspaceFolder": "/workspaces/project",
+
+	"runArgs": [
+  		"--userns=keep-id"
+	],
+
+	"containerEnv": {
+		"HOME": "/home/node"
+	},
+
+	"remoteUser": "node",
+	"containerUser": "node",
+
+	"postCreateCommand": "yarn install",
+	"customizations": {
+		"vscode": { "extensions": [
+			"esbenp.prettier-vscode",
+			"orta.vscode-jest"
+		] }
+	}
+}
