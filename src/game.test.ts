@@ -18,7 +18,7 @@ test("Create a game.", () => {
     const handicap = new Handicap(6.5, 0);
     const game = new Game(1, 1, GameSize.Nine, handicap);
     expect(game.gameSize).toBe(9);
-    expect(game.players.length).toBe(0);
+    expect(game.getPlayers().length).toBe(0);
 
     const blackPlayer: Player = new Player(StoneColor.Black);
     game.addPlayer(blackPlayer);

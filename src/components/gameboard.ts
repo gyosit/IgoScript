@@ -13,9 +13,9 @@ const DEFAULT_TERRITORY_SIZE = 2;
  * 
  */
 export class GameBoard {
-    gameSize: GameSize;
-    groups: Group[];
-    vertexTerritories: VertexTerritory[];
+    readonly gameSize: GameSize;
+    private groups: Group[];
+    private vertexTerritories: VertexTerritory[];
 
     /* Errors */
     static ERR_EMPTY_STONE = new Error('Empty stone is not allowed to play.');
@@ -33,6 +33,16 @@ export class GameBoard {
         this.gameSize = gameSize;
         this.groups = [];
         this.vertexTerritories = [];
+    }
+    
+    /**
+     * Get the groups of the board.
+     * 
+     * @returns {Group[]} The groups of the board.
+     * 
+     */
+    getGroups(): Group[] {
+        return this.groups;
     }
 
     /**
@@ -71,8 +81,8 @@ export class GameBoard {
         // Check whether the vertex is occupied.
         for (let group of this.groups) {
             for (let vertexStone of group.getVertexStones()) {
-                if (vertexStone.vertex.index === vertex.index) {
-                    if (vertexStone.stone.stoneColor === StoneColor.Ko) {
+                if (vertexStone.getVertex().getIndex() === vertex.getIndex()) {
+                    if (vertexStone.getStone().getStoneColor() === StoneColor.Ko) {
                         throw GameBoard.ERR_KO_STONE;
                     }
                     throw GameBoard.ERR_OCCUPIED_VERTEX;
@@ -93,7 +103,7 @@ export class GameBoard {
         const mergingGroups: Group[] = [group]; // The group to merge including the played group.
         for (const stone of stones) {
             const adjacentGroups: Group[] = allyGroups.filter(g => 
-                Vertex.includes(g.getBreathPoints(), stone.vertex) &&
+                Vertex.includes(g.getBreathPoints(), stone.getVertex()) &&
                 mergingGroups.indexOf(g) === -1
             );
             for (const adjacentGroup of adjacentGroups) {
@@ -120,7 +130,7 @@ export class GameBoard {
         const enemyGroups = this.groups.filter(g => g.getStoneColor() !== stoneColor && g.getStoneColor() !== StoneColor.Empty && g.getStoneColor() !== StoneColor.Ko);
         const capturedVertex: Vertex[] = [];
         for (const enemyGroup of enemyGroups) {
-            const mayCaptured = enemyGroup.getVertexStones().map(vertexStone => vertexStone.vertex);
+            const mayCaptured = enemyGroup.getVertexStones().map(vertexStone => vertexStone.getVertex());
             const isCaptured = enemyGroup.collapsed(parentGroup);
             if (isCaptured) {
                 capturedVertex.push(...mayCaptured);
@@ -172,7 +182,7 @@ export class GameBoard {
                 const koStone = group.getVertexStones()[0];
             }
             for (let vertexStone of group.getVertexStones()) {
-                currentBoard[vertexStone.vertex.index] = vertexStone.stone;
+                currentBoard[vertexStone.getVertex().getIndex()] = vertexStone.getStone();
             }
         }
 
@@ -180,11 +190,11 @@ export class GameBoard {
     }
 
     get(vertex: Vertex): StoneColor {
-        if (vertex.index < 0 || vertex.index >= this.gameSize * this.gameSize) {
+        if (vertex.getIndex() < 0 || vertex.getIndex() >= this.gameSize * this.gameSize) {
             throw GameBoard.ERR_OUT_OF_BOARD;
         }
         const currentBoard = this.getCurrentBoard();
-        return currentBoard[vertex.index].stoneColor;
+        return currentBoard[vertex.getIndex()].getStoneColor();
     }
 
     /**
@@ -198,7 +208,7 @@ export class GameBoard {
     getGroup(vertex: Vertex): Group {
         for (let group of this.groups) {
             for (let vertexStone of group.getVertexStones()) {
-                if (vertexStone.vertex.index === vertex.index) {
+                if (vertexStone.getVertex().getIndex() === vertex.getIndex()) {
                     return group;
                 }
             }
@@ -271,19 +281,19 @@ export class Group {
      */
     private findBreathPoints(vertexStone: VertexStone): Vertex[] {
         this.errEmptyOrKo();
-        const gameSize = vertexStone.vertex.gameSize;
+        const gameSize = vertexStone.getVertex().gameSize;
         const breathPoints: Vertex[] = [];
-        if (vertexStone.vertex.x > 0) {
-            breathPoints.push(V.vertex([vertexStone.vertex.x - 1, vertexStone.vertex.y]));
+        if (vertexStone.getVertex().getX() > 0) {
+            breathPoints.push(V.vertex([vertexStone.getVertex().getX() - 1, vertexStone.getVertex().getY()]));
         }
-        if (vertexStone.vertex.x < gameSize - 1) {
-            breathPoints.push(V.vertex([vertexStone.vertex.x + 1, vertexStone.vertex.y]));
+        if (vertexStone.getVertex().getX() < gameSize - 1) {
+            breathPoints.push(V.vertex([vertexStone.getVertex().getX() + 1, vertexStone.getVertex().getY()]));
         }
-        if (vertexStone.vertex.y > 0) {
-            breathPoints.push(V.vertex([vertexStone.vertex.x, vertexStone.vertex.y - 1]));
+        if (vertexStone.getVertex().getY() > 0) {
+            breathPoints.push(V.vertex([vertexStone.getVertex().getX(), vertexStone.getVertex().getY() - 1]));
         }
-        if (vertexStone.vertex.y < gameSize - 1) {
-            breathPoints.push(V.vertex([vertexStone.vertex.x, vertexStone.vertex.y + 1]));
+        if (vertexStone.getVertex().getY() < gameSize - 1) {
+            breathPoints.push(V.vertex([vertexStone.getVertex().getX(), vertexStone.getVertex().getY() + 1]));
         }
 
         return breathPoints;
@@ -313,8 +323,8 @@ export class Group {
         }
 
         for (let vertexStone of enemyGroup.getVertexStones()) {
-            if (Vertex.includes(this.breathPoints, vertexStone.vertex)) {
-                this.removeBreathPoint(vertexStone.vertex);
+            if (Vertex.includes(this.breathPoints, vertexStone.getVertex())) {
+                this.removeBreathPoint(vertexStone.getVertex());
             }
         }
 
@@ -372,7 +382,7 @@ export class Group {
     addVertexStone(vertex: Vertex, stoneColor: StoneColor) {3
         // Check whether the vertex stone already exists.
         for (let vertexStone of this.vertexStones) {
-            if (vertexStone.vertex.index === vertex.index) {
+            if (vertexStone.getVertex().getIndex() === vertex.getIndex()) {
                 throw Group.ERR_ALREADY_EXISTS_VERTEX_STONE;
             }
         }
@@ -478,7 +488,7 @@ export class Group {
         let isNear = false;
         for (let vertexStone of this.vertexStones) {
             for (let breathPoint of group.getBreathPoints()) {
-                if (vertexStone.vertex.index === breathPoint.index) {
+                if (vertexStone.getVertex().getIndex() === breathPoint.getIndex()) {
                     // The groups are adjacent.
                     isNear = true;
                     break;
@@ -490,7 +500,7 @@ export class Group {
         }
 
         for (let vertexStone of group.getVertexStones()) {
-            this.addVertexStone(vertexStone.vertex, vertexStone.stone.stoneColor);
+            this.addVertexStone(vertexStone.getVertex(), vertexStone.getStone().getStoneColor());
         }
 
         for (let breathPoint of group.getBreathPoints()) {
@@ -503,8 +513,8 @@ export class Group {
 
         // Remove the breath points of the stones played.
         for (let vertexStone of this.getVertexStones()) {
-            if (Vertex.includes(this.breathPoints, vertexStone.vertex)) {
-                this.removeBreathPoint(vertexStone.vertex);
+            if (Vertex.includes(this.breathPoints, vertexStone.getVertex())) {
+                this.removeBreathPoint(vertexStone.getVertex());
             }
         }
 
@@ -524,8 +534,8 @@ export class Group {
  * 
  */
 export class VertexStone {
-    vertex: Vertex;
-    stone: Stone;
+    private vertex: Vertex;
+    private stone: Stone;
 
     /**
      * 
@@ -536,6 +546,26 @@ export class VertexStone {
     constructor(vertex: Vertex, stone: Stone) {
         this.vertex = vertex;
         this.stone = stone;
+    }
+
+    /**
+     * Get the vertex of the pair.
+     * 
+     * @returns {Vertex} The vertex of the pair.
+     * 
+     */
+    getVertex(): Vertex {
+        return this.vertex;
+    }
+
+    /**
+     * Get the stone of the pair.
+     * 
+     * @returns {Stone} The stone of the pair.
+     * 
+     */
+    getStone(): Stone {
+        return this.stone;
     }
 }
 
@@ -550,9 +580,9 @@ export class VertexStone {
  */
 export class Stone {
     private id: number;
-    stoneColor: StoneColor;
-    territorySize: number;
-    survivability: number;
+    private stoneColor: StoneColor;
+    private territorySize: number;
+    private survivability: number;
 
     /**
      * 
@@ -566,6 +596,16 @@ export class Stone {
         this.territorySize = DEFAULT_TERRITORY_SIZE;
         this.survivability = 0;
     }
+
+    /**
+     * Get the color of the stone.
+     * 
+     * @returns {StoneColor} The color of the stone.
+     * 
+     */
+    getStoneColor(): StoneColor {
+        return this.stoneColor;
+    }
 }
 
 /**
@@ -576,8 +616,8 @@ export class Stone {
  * 
  */
 class VertexTerritory {
-    vertex: Vertex;
-    territory: Territory;
+    private vertex: Vertex;
+    private territory: Territory;
 
     /**
      * 
@@ -599,8 +639,8 @@ class VertexTerritory {
  * 
  */
 class Territory {
-    stoneColor: StoneColor;
-    propability: number;
+    private stoneColor: StoneColor;
+    private propability: number;
 
     /**
      * 
