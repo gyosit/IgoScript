@@ -101,8 +101,36 @@ export class Game {
         this.changeTurn();
     }
 
+    /**
+     * Pass a turn.
+     * 
+     * @param {StoneColor} stoneColor The color of the stone to pass.
+     * 
+     */
+    pass(stoneColor: StoneColor) {
+        if (stoneColor !== this.turn) throw Game.ERR_PLAY_OUT_OF_TURN
+        this.changeTurn();
+    }
+
+    /**
+     * Get the stone at a vertex.
+     * 
+     * @param {Vertex} vertex The vertex to get.
+     * 
+     * @returns {StoneColor} The stone at the vertex.
+     * 
+     */
     get(vertex: Vertex): StoneColor {
         return this.gameBoard.get(vertex);
     }
 
+    /**
+     * Get the turn.
+     * 
+     * @returns {StoneColor} The turn of the game.
+     * 
+     */
+    getTurn(): StoneColor {
+        return this.turn;
+    }
 }
