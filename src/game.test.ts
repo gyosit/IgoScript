@@ -1,5 +1,5 @@
 import { GameSize, Handicap, Player, StoneColor, Vertex, VertexBase } from './components/common';
-import { GameBoard } from './components/gameboard';
+import { GameBoard, Stone } from './components/gameboard';
 import { Game } from './game';
 
 const V = new VertexBase(GameSize.Nine);
@@ -51,3 +51,24 @@ test("Not allowed to play in a row.", () => {
     expect(() => game.play(vertex2, StoneColor.Black)).toThrow(Game.ERR_PLAY_OUT_OF_TURN);
 });
 
+test("Get the turn.", () => {
+    const game: Game = initializeGame();
+
+    expect(game.getTurn()).toBe(StoneColor.Black);
+
+    const vertex1 = V.vertex([0, 0]);
+    game.play(vertex1, StoneColor.Black);
+    expect(game.getTurn()).toBe(StoneColor.White);
+});
+
+test("Pass the turn.", () => {
+    const game: Game = initializeGame();
+
+    game.pass(StoneColor.Black);
+    expect(game.getTurn()).toBe(StoneColor.White);
+    expect(() => game.pass(StoneColor.Black)).toThrow(Game.ERR_PLAY_OUT_OF_TURN);
+
+    game.pass(StoneColor.White);
+    expect(game.getTurn()).toBe(StoneColor.Black);
+    expect(() => game.pass(StoneColor.White)).toThrow(Game.ERR_PLAY_OUT_OF_TURN);
+});
