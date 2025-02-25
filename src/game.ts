@@ -18,18 +18,18 @@ import { GameBoard } from './components/gameboard';
  * 
  */
 export class Game {
-    private id: number;
-    private originalId: number;
-    private isInitialized: boolean;
-    private turnOrder: StoneColor[];
-    gameBoard: GameBoard;
-    gameSize: GameSize;
-    gameStatus: GameStatus;
-    handicap: Handicap;
-    players: Player[];
-    isThinking: boolean;
-    sgf: string;
-    turn: StoneColor;
+    readonly id: number;
+    readonly originalId: number;
+    readonly isInitialized: boolean;
+    readonly turnOrder: StoneColor[];
+    private gameBoard: GameBoard;
+    readonly gameSize: GameSize;
+    private gameStatus: GameStatus;
+    readonly handicap: Handicap;
+    private players: Player[];
+    private isThinking: boolean;
+    private sgf: string;
+    private turn: StoneColor;
 
     /* Error */
     static ERR_PLAYER_ALREADY_EXISTS = new Error('The player already exists.');
@@ -86,6 +86,16 @@ export class Game {
         }
         
         this.players.push(player);
+    }
+
+    /**
+     * Get the players of the game.
+     * 
+     * @returns {Player[]} The players of the game.
+     * 
+     */
+    getPlayers(): Player[] {
+        return this.players;
     }
 
     /**

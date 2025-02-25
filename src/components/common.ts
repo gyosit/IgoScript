@@ -30,7 +30,7 @@ type XYI = [number, number] | number;
  * 
  */
 export class VertexBase {
-    gameSize: GameSize;
+    readonly gameSize: GameSize;
 
     /**
      * 
@@ -65,10 +65,10 @@ export class VertexBase {
  * 
  */
 export class Vertex {
-    x: number;
-    y: number;
-    index: number;
-    gameSize: GameSize;
+    private x: number;
+    private y: number;
+    private index: number;
+    readonly gameSize: GameSize;
 
     /**
      * 
@@ -87,6 +87,36 @@ export class Vertex {
             this.y = xyi[1];
             this.index = this.y * gameSize + this.x;
         }
+    }
+
+    /**
+     * Get the x coordinate of the vertex.
+     * 
+     * @returns {number} The x coordinate of the vertex.
+     * 
+     */
+    getX(): number {
+        return this.x;
+    }
+
+    /**
+     * Get the y coordinate of the vertex.
+     * 
+     * @returns {number} The y coordinate of the vertex.
+     * 
+     */
+    getY(): number {
+        return this.y;
+    }
+
+    /**
+     * Get the index of the vertex.
+     * 
+     * @returns {number} The index of the vertex.
+     * 
+     */
+    getIndex(): number {
+        return this.index;
     }
 
     /**
@@ -128,8 +158,8 @@ export class Vertex {
  * 
  */
 export class Handicap {
-    komi: number;
-    numStones: number;
+    readonly komi: number;
+    readonly numStones: number;
 
     constructor(komi: number, numStones: number) {
         this.komi = komi;
@@ -147,10 +177,10 @@ export class Handicap {
  * 
  */
 export class Player {
-    stoneColor: StoneColor;
-    numAgehamas: number;
-    numTerritories: number;
-    isWinner: boolean;
+    readonly stoneColor: StoneColor;
+    private numAgehamas: number;
+    private numTerritories: number;
+    private isWinner: boolean;
 
     /**
      * 
