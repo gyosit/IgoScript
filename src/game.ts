@@ -4,8 +4,8 @@ import { GameBoard } from './components/gameboard';
 /**
  * The game of igo.
  * 
- * @param {number} id The id of the game.
- * @param {number} originalId The original id of the game.
+ * @param {string} id The id of the game.
+ * @param {string} originalId The original id of the game.
  * @param {boolean} isInitialized Whether the game is initialized.
  * @param {GameBoard} gameBoard The board of the game.
  * @param {GameSize} gameSize The size of the game.
@@ -18,8 +18,8 @@ import { GameBoard } from './components/gameboard';
  * 
  */
 export class Game {
-    readonly id: number;
-    readonly originalId: number;
+    readonly id: string;
+    readonly originalId: string;
     readonly isInitialized: boolean;
     readonly turnOrder: StoneColor[];
     private gameBoard: GameBoard;
@@ -44,7 +44,7 @@ export class Game {
      * @param {Handicap} handicap The handicap of the game.
      * 
      */
-    constructor(id: number, originalId: number, gameSize: GameSize, handicap: Handicap) {
+    constructor(id: string, originalId: string, gameSize: GameSize, handicap: Handicap) {
         this.id = id;
         this.originalId = originalId;
         this.isInitialized = false;

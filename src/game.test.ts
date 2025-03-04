@@ -6,7 +6,7 @@ const V = new VertexBase(GameSize.Nine);
 
 const initializeGame = () => {
     const handicap = new Handicap(6.5, 0);
-    const game = new Game(1, 1, GameSize.Nine, handicap);
+    const game = new Game("1", "1", GameSize.Nine, handicap);
     const blackPlayer: Player = new Player(StoneColor.Black);
     game.addPlayer(blackPlayer);
     const whitePlayer: Player = new Player(StoneColor.White);
@@ -16,9 +16,11 @@ const initializeGame = () => {
 
 test("Create a game.", () => {
     const handicap = new Handicap(6.5, 0);
-    const game = new Game(1, 1, GameSize.Nine, handicap);
+    const game = new Game("1", "1", GameSize.Nine, handicap);
     expect(game.gameSize).toBe(9);
     expect(game.getPlayers().length).toBe(0);
+    expect(game.id).toBe("1");
+    expect(game.originalId).toBe("1");
 
     const blackPlayer: Player = new Player(StoneColor.Black);
     game.addPlayer(blackPlayer);
